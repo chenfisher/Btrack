@@ -3,13 +3,6 @@ require 'btrack/helper'
 
 describe Btrack::Tracker do
 
-  before :each do
-    Btrack.config do |config|
-      Btrack.redis.flushdb
-      Btrack.redis.select 15
-    end
-  end
-
   it "calls track_with_hash with expected hash" do
     expected = { key: "login", granularity: :daily, id: 123 }
     Btrack::Tracker.should_receive(:track_with_hash).with expected
