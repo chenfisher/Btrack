@@ -2,7 +2,7 @@ module Btrack
   class Helper
 
     class << self
-      def key(k, g=:daily, w)
+      def key(k, g=:daily, w=Time.now)
         "#{Config.namespace}:#{k}:#{granularity g, w || Time.now}"
       end
 
