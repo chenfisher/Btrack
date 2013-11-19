@@ -5,6 +5,7 @@ require "btrack/config"
 require "btrack/time_frame"
 require "btrack/redis"
 require "btrack/tracker"
+require "btrack/trackable"
 require "btrack/query"
 
 module Btrack
