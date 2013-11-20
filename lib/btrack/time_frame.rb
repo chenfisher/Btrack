@@ -28,8 +28,10 @@ module Btrack
       end
 
       def init_with_hash(timeframe)
-        @from = timeframe[:from] && timeframe[:from].is_a?(String) && Time.parse(timeframe[:from]) || timeframe[:from] || 1.month.ago
-        @to = timeframe[:to] && timeframe[:to].is_a?(String) && Time.parse(timeframe[:to]) || timeframe[:to] || Time.now
+        from = timeframe[:from] && timeframe[:from].is_a?(String) && Time.parse(timeframe[:from]) || timeframe[:from] || 1.month.ago
+        to = timeframe[:to] && timeframe[:to].is_a?(String) && Time.parse(timeframe[:to]) || timeframe[:to] || Time.now
+
+        return from, to
       end
   end
 end

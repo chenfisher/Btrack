@@ -2,8 +2,14 @@ require 'spec_helper'
 
 describe Btrack::Query do
 
-  xit "returns bitcount" do
-    Btrack::Query.query("login", 123, :today).should be_true
+  context "count" do
+    10.times { |i| Btrack::Tracker.track "login", i, :daily }
+
+    it "returns count" do
+      Btrack::Query.count("login", :today).should eq 10
+    end
+
+    it "accepts time frame"
   end
 
 end
