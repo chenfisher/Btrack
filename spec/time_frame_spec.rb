@@ -6,4 +6,10 @@ describe Btrack::TimeFrame do
     tf.from.to_i.should eq 10.days.ago.to_i
     tf.to.to_i.should eq Time.now.to_i
   end
+
+  it "accepts range as from and to" do
+    tf = Btrack::TimeFrame.new 10.days.ago..Time.now
+    tf.from.to_i.should eq 10.days.ago.to_i
+    tf.to.to_i.should eq Time.now.to_i
+  end
 end
