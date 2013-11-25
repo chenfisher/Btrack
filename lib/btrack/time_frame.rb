@@ -3,14 +3,8 @@ module Btrack
     attr_reader :from, :to
 
     def initialize(timeframe)
-      @timeframe = timeframe
-
-      @from, @to = case timeframe
-      when Symbol
-        init_with_symbol(timeframe)
-      when Hash
-        init_with_hash(timeframe)
-      end
+      raise ArgumentError, "TimeFrame should be initialized with Symbol, Hash or Range" unless [Symbol, Hash, Range].include? timeframe.class
+      @from, @to = self.send("init_with_#{timeframe.class.to_s.underscore}", timeframe)
     end
 
     private
@@ -30,6 +24,10 @@ module Btrack
       def init_with_hash(timeframe)
         [timeframe[:from] && timeframe[:from].is_a?(String) && Time.parse(timeframe[:from]) || timeframe[:from] || 1.month.ago,
         timeframe[:to] && timeframe[:to].is_a?(String) && Time.parse(timeframe[:to]) || timeframe[:to] || Time.now]
+      end
+
+      def init_with_range(timeframe)
+        init_with_hash(from: timeframe.first, to: timeframe.last)
       end
   end
 end
