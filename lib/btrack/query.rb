@@ -1,7 +1,8 @@
+require 'btrack/query/criteria'
+
 module Btrack
   class Query
     class << self
-
       def count(key, timeframe, granularity=:daily)
         tf = TimeFrame.new timeframe
 
@@ -11,6 +12,21 @@ module Btrack
         end
 
         Btrack.redis.eval(lua_count, keys)
+      end
+
+      def query(key, timeframe, granularity=:daily)
+        tf = TimeFrame.new timeframe
+
+        keys = []
+        (tf.from.to_i .. tf.to.to_i).step(step(granularity)) do |t|
+          keys << Btrack::Helper.key(key, granularity, Time.at(t))
+        end
+
+        !!Btrack.redis.eval(lua_exists, keys)
+      end
+
+      def method_missing(method, *args, &block)
+        Criteria.new.send(method, *args, &block)
       end
 
       private
@@ -36,6 +52,18 @@ module Btrack
             end
 
             return count
+          }
+        end
+
+        def lua_exists
+          %Q{
+            for i, k in ipairs(KEYS) do
+              if redis.call('bitcount', k) > 0 then
+                return true
+              end
+            end
+
+            return false
           }
         end
     end
