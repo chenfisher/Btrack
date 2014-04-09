@@ -45,12 +45,10 @@ module Btrack
 
         def lua_count
           %Q{
-            local tmp = "tmp"
-            local count = 0
-            for i, k in ipairs(KEYS) do
-              count = count + redis.call('bitcount', k)
-            end
+            redis.call('bitop', 'or', 'tmp', unpack(KEYS))
+            local count = redis.call('bitcount', 'tmp')
 
+            redis.call('del', 'tmp')
             return count
           }
         end
