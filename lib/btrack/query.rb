@@ -14,7 +14,7 @@ module Btrack
         Btrack.redis.eval(lua_count, keys)
       end
 
-      def query(key, timeframe, granularity=:daily)
+      def exists?(id, key, timeframe, granularity=:daily)
         tf = TimeFrame.new timeframe
 
         keys = []
@@ -22,11 +22,13 @@ module Btrack
           keys << Btrack::Helper.key(key, granularity, Time.at(t))
         end
 
-        !!Btrack.redis.eval(lua_exists, keys)
+        1 == Btrack.redis.eval(lua_exists, keys, [id])
       end
 
       def method_missing(method, *args, &block)
-        Criteria.new.send(method, *args, &block)
+        return unless method.to_s.end_with?("?")
+
+        Btrack::Query.exists? args[0], (method.to_s.chomp '?'), args[1]
       end
 
       private
@@ -55,13 +57,11 @@ module Btrack
 
         def lua_exists
           %Q{
-            for i, k in ipairs(KEYS) do
-              if redis.call('bitcount', k) > 0 then
-                return true
-              end
-            end
+            redis.call('bitop', 'or', 'tmp', unpack(KEYS))
+            local exists = redis.call('getbit', 'tmp', ARGV[1])
 
-            return false
+            redis.call('del', 'tmp')
+            return exists
           }
         end
     end
