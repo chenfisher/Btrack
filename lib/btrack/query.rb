@@ -2,68 +2,71 @@ require 'btrack/query/criteria'
 
 module Btrack
   class Query
+    attr_reader :criteria
+
     class << self
-      def count(key, timeframe, granularity=:daily)
-        tf = TimeFrame.new timeframe
-
-        keys = []
-        (tf.from.to_i .. tf.to.to_i).step(step(granularity)) do |t|
-          keys << Btrack::Helper.key(key, granularity, Time.at(t))
-        end
-
-        Btrack.redis.eval(lua_count, keys)
-      end
-
-      def exists?(id, key, timeframe, granularity=:daily)
-        tf = TimeFrame.new timeframe
-
-        keys = []
-        (tf.from.to_i .. tf.to.to_i).step(step(granularity)) do |t|
-          keys << Btrack::Helper.key(key, granularity, Time.at(t))
-        end
-
-        1 == Btrack.redis.eval(lua_exists, keys, [id])
-      end
-
-      def method_missing(method, *args, &block)
-        return unless method.to_s.end_with?("?")
-
-        Btrack::Query.exists? args[0], (method.to_s.chomp '?'), args[1]
-      end
-
-      private
-        def step(g)
-          case g
-          when :minute then 1.minute
-          when :hourly then 1.hour
-          when :daily then 1.day
-          when :weekly then 1.week
-          when :monthly then 1.month
-          when :yearly then 1.year
-          else
-            1.day
-          end
-        end
-
-        def lua_count
-          %Q{
-            redis.call('bitop', 'or', 'tmp', unpack(KEYS))
-            local count = redis.call('bitcount', 'tmp')
-
-            redis.call('del', 'tmp')
-            return count
-          }
-        end
-
-        def lua_exists
-          %Q{
-            redis.call('bitop', 'or', 'tmp', unpack(KEYS))
-            local exists = redis.call('getbit', 'tmp', ARGV[1])
-
-            redis.call('del', 'tmp')
-            return exists
-          }
-        end
+      delegate :where, to: Criteria
     end
+
+    def initialize(criteria = nil)
+      @criteria = criteria
+    end
+
+    def count
+      keys, args = @criteria.realize!
+      Btrack.redis.eval(lua_count, keys, args)
+    end
+
+    private
+      def prefix
+        %Q{
+          local index = 1
+
+          for i, count in ipairs(ARGV) do
+            if count == '0' then
+              break
+            end
+
+            local bitop = {}
+
+            for c = index, index * count do
+              table.insert(bitop, KEYS[c])
+              index = index + 1
+            end
+
+            if i == 1 then
+              redis.call('bitop', 'or', 'tmp', unpack(bitop))
+            else
+              redis.call('bitop', 'or', 'tmp:or', unpack(bitop))
+              redis.call('bitop', 'and', 'tmp', 'tmp', 'tmp:or')
+              redis.call('del', 'tmp:or')
+            end
+          end
+
+          local count = redis.call('bitcount', 'tmp')
+          redis.call('del', 'tmp')
+          return count
+        }          
+      end
+
+      def lua_count
+        %Q{
+          redis.call('bitop', 'or', 'tmp', unpack(KEYS))
+          local count = redis.call('bitcount', 'tmp')
+
+          redis.call('del', 'tmp')
+          return count
+        }
+      end
+
+      def lua_exists
+        %Q{
+          redis.call('bitop', 'or', 'tmp', unpack(KEYS))
+          local exists = redis.call('getbit', 'tmp', ARGV[1])
+
+          redis.call('del', 'tmp')
+          return exists
+        }
+      end
   end
 end

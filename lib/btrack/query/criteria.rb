@@ -1,37 +1,54 @@
+require 'btrack/helper'
+require 'btrack/time_frame'
+
 module Btrack
   class Query
     class Criteria
       attr_reader :options
+      delegate :count, to: :query
 
-      def initialize(options={})
-        @options = options
+      # initializes a new crieteria
+      # args must contain an array (or hash) of criteria and and optional options
+      # examples: 
+      # Criteria.new [name: "chen", sur: "fisher"], prefix: "item"
+      # Criteria.new {name: "chen", sur: "fisher"}, prefix: "item"
+      # Criteria.new name: "chen", sur: "fisher"
+      def initialize(*args)
+        options = args.pop if args.last.is_a?(Hash)
+        @options = (options ||= {}).merge(criteria: (parse args).flatten)
       end
 
-      def method_missing(method, *args, &block)
-        if !@options[:key] && method.to_s.end_with?("?")
-          set_key_and_timeframe(method, args.first) && self
-        elsif !@options[:id]
-          set_id(args.first) && self
-        else
-          super
-        end
+      # returns a new criteria object with the union of both criterias
+      def where(criteria)
+        Criteria.new @options[:criteria] + parse(criteria), @options
       end
 
-      class << self
-        def method_missing(method, *args, &block)
-          Criteria.new.send(method, *args, &block)
+      # make this criteria 'real' by extracting keys and args to be passed to redis lua script
+      def realize!
+        prefix = "#{options[:prefix]}:" if options[:prefix]
+
+        keys = @options[:criteria].map do |c|
+          (Helper.keys "#{prefix}#{c.keys.first}", TimeFrame.new(c.values.first, c[:granularity] || :daily)).flatten
         end
+
+        [keys, keys.map(&:count)]
+      end
+
+      # access methods from class instance
+      # returns a new criteria instance
+      class << self; def where(criteria); Criteria.new.where criteria; end; end
+
+      # delegate method
+      def query
+        Query.new self
       end
 
       private
 
-        def set_id(id)
-          @options[:id] = id
-        end
-
-        def set_key_and_timeframe(key, timeframe)
-          @options[:key] = key.to_s.chomp '?'
-          @options[:timeframe] = timeframe
+        # criteria is expected to be an array or a hash
+        # transform criteria to an array of hashes
+        def parse(criteria)
+          criteria.is_a?(Array) ? criteria : criteria.map { |k, v| {k => v} }
         end
     end
   end

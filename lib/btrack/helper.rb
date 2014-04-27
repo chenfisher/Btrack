@@ -6,6 +6,11 @@ module Btrack
         "#{Config.namespace}:#{k}:#{granularity g, w || Time.now}"
       end
 
+      def keys(k, timeframe)
+        tf = timeframe.is_a?(TimeFrame) ? timeframe : (TimeFrame.new timeframe)
+        tf.splat { |t| key k, tf.granularity, t}
+      end
+
       def granularity(g=:daily, w=Time.now)
         return g unless [:minute, :hourly, :daily, :weekly, :monthly, :yearly].include? g
         w.strftime(format(g))
