@@ -14,7 +14,7 @@ module Btrack
 
     def count
       keys, args = @criteria.realize!
-      Btrack.redis.eval(lua_count, keys, args)
+      Btrack.redis.eval(lua_count, keys.flatten, args)
     end
 
     private

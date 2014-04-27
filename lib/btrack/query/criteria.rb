@@ -25,7 +25,7 @@ module Btrack
 
       # make this criteria 'real' by extracting keys and args to be passed to redis lua script
       def realize!
-        prefix = "#{options[:prefix]}:" if options[:prefix]
+        prefix = "#{@options[:prefix]}:" if @options[:prefix]
 
         keys = @options[:criteria].map do |c|
           (Helper.keys "#{prefix}#{c.keys.first}", TimeFrame.new(c.values.first, c[:granularity] || :daily)).flatten
@@ -36,7 +36,11 @@ module Btrack
 
       # access methods from class instance
       # returns a new criteria instance
-      class << self; def where(criteria); Criteria.new.where criteria; end; end
+      class << self
+        def where(*args)
+          Criteria.new *args
+        end
+      end
 
       # delegate method
       def query
