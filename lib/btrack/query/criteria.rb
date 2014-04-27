@@ -5,7 +5,7 @@ module Btrack
   class Query
     class Criteria
       attr_reader :options
-      delegate :count, to: :query
+      delegate :count, :exists, to: :query
 
       # initializes a new crieteria
       # args must contain an array (or hash) of criteria and and optional options
@@ -31,7 +31,7 @@ module Btrack
           (Helper.keys "#{prefix}#{c.keys.first}", TimeFrame.new(c.values.first, c[:granularity] || :daily)).flatten
         end
 
-        [keys, keys.map(&:count)]
+        [keys.flatten << @options[:id], keys.map(&:count)]
       end
 
       # access methods from class instance

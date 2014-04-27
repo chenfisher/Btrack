@@ -13,8 +13,12 @@ module Btrack
     end
 
     def count
+      Btrack.redis.eval(lua_count, *@criteria.realize!)
+    end
+
+    def exists
       keys, args = @criteria.realize!
-      Btrack.redis.eval(lua_count, keys.flatten, args)
+      Btrack.redis.eval(lua_exists, *@criteria.realize!)
     end
 
     private
@@ -42,18 +46,14 @@ module Btrack
               redis.call('del', 'tmp:or')
             end
           end
-
-          local count = redis.call('bitcount', 'tmp')
-          redis.call('del', 'tmp')
-          return count
         }          
       end
 
       def lua_count
         %Q{
-          redis.call('bitop', 'or', 'tmp', unpack(KEYS))
-          local count = redis.call('bitcount', 'tmp')
+          #{prefix}
 
+          local count = redis.call('bitcount', 'tmp')
           redis.call('del', 'tmp')
           return count
         }
@@ -61,9 +61,9 @@ module Btrack
 
       def lua_exists
         %Q{
-          redis.call('bitop', 'or', 'tmp', unpack(KEYS))
-          local exists = redis.call('getbit', 'tmp', ARGV[1])
+          #{prefix}
 
+          local exists = redis.call('getbit', 'tmp', KEYS[#KEYS])
           redis.call('del', 'tmp')
           return exists
         }
