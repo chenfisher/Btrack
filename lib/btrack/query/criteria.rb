@@ -5,7 +5,7 @@ module Btrack
   class Query
     class Criteria
       attr_reader :options
-      delegate :count, :exists, to: :query
+      delegate :count, :exists, :plot, to: :query
 
       # initializes a new crieteria
       # args must contain an array (or hash) of criteria and and optional options

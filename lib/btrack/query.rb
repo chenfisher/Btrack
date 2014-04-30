@@ -21,6 +21,10 @@ module Btrack
       Btrack.redis.eval(lua(:exists), *@criteria.realize!)
     end
 
+    def plot
+      Btrack.redis.eval(plot_lua, *@criteria.realize!)
+    end
+
     private
       def lua(f)
         %Q{
@@ -60,6 +64,36 @@ module Btrack
 
       def lua_exists
         "local results = redis.call('getbit', 'tmp', KEYS[#KEYS])"
+      end
+
+      # lua script for plotting
+      # please note - it cannot be used with the prefixed 'lua' like count and exists
+      # this is a standalone script ment for plotting and allowing for cohort analysis
+      # all series must be of the same size
+      def plot_lua
+        %Q{
+          local series_count = #ARGV
+          local length = ARGV[1]
+
+          -- run over the first series
+          -- all series must be of the same size
+          local plot = {}
+          for i = 1, length do
+            local bitop = {}
+            for j = 1, series_count do
+              table.insert(bitop, KEYS[i*j])
+            end
+
+            -- make sure 'tmp' is populated with the first key (so the 'and' op would work as expected)
+            redis.call('bitop', 'or', 'tmp', 'tmp', bitop[1])
+
+            redis.call('bitop', 'and', 'tmp', unpack(bitop))
+            table.insert(plot, redis.call('bitcount', 'tmp'))
+            redis.call('del', 'tmp')
+          end
+
+          return plot
+        }          
       end
   end
 end
