@@ -22,7 +22,7 @@ module Btrack
     end
 
     def plot
-      Btrack.redis.eval(plot_lua, *@criteria.realize!)
+      JSON.parse Btrack.redis.eval(plot_lua, *@criteria.realize!)
     end
 
     private
@@ -88,11 +88,12 @@ module Btrack
             redis.call('bitop', 'or', 'tmp', 'tmp', bitop[1])
 
             redis.call('bitop', 'and', 'tmp', unpack(bitop))
-            table.insert(plot, redis.call('bitcount', 'tmp'))
+            -- table.insert(plot, redis.call('bitcount', 'tmp'))
+            plot[KEYS[i]] = redis.call('bitcount', 'tmp')
             redis.call('del', 'tmp')
           end
 
-          return plot
+          return cjson.encode(plot)
         }          
       end
   end
