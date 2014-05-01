@@ -25,6 +25,14 @@ module Btrack
       JSON.parse Btrack.redis.eval(plot_lua, *@criteria.realize!)
     end
 
+    class << self
+      def method_missing(method, *args, &block)
+        return unless method.to_s.end_with? '?'
+
+        Criteria.where(method.to_s.chomp('?') => args[1], id: args[0]).exists
+      end
+    end
+
     private
       def lua(f)
         %Q{
