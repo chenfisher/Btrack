@@ -28,7 +28,8 @@ module Btrack
         prefix = "#{@options[:prefix]}:" if @options[:prefix]
 
         keys = @options[:criteria].map do |c|
-          (Helper.keys "#{prefix}#{c.keys.first}", TimeFrame.new(c.values.first, c[:granularity] || :daily)).flatten
+          cvalue = c.values.first
+          (Helper.keys "#{prefix}#{c.keys.first}", TimeFrame.new(cvalue, c[:granularity] || (cvalue.granularity if cvalue.is_a? TimeFrame) || :daily)).flatten
         end
 
         [keys.flatten << @options[:id], keys.map(&:count)]
