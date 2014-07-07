@@ -10,7 +10,7 @@ describe Btrack::Tracker do
     Btrack::Tracker.track "login", 123, :daily
   end
 
-  it "block calls track_with_hash with expected hash" do
+  it "calls track_with_hash with expected hash when used with a block" do
     expected = OpenStruct.new(key: "login", granularity: :daily, id: 123)
     Btrack::Tracker.should_receive(:track_with_hash).with expected
 
@@ -23,6 +23,11 @@ describe Btrack::Tracker do
 
   it "tracks the metric" do
     Btrack::Tracker.track "login", 123, :daily
+    Btrack.redis.getbit(Btrack::Helper.key("login", :daily, Time.now), 123).should eq 1
+  end
+
+  it "accepts a symbol as key" do
+    Btrack::Tracker.track :login, 123, :daily
     Btrack.redis.getbit(Btrack::Helper.key("login", :daily, Time.now), 123).should eq 1
   end
 

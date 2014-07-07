@@ -19,4 +19,12 @@ module Btrack
     yield Btrack::Config if block_given?
     Btrack::Config
   end
+
+  def where(*args)
+  	Query.where *args
+  end
+
+  def track(*args, &block)
+  	Tracker.track *args, &block
+  end
 end
