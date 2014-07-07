@@ -9,14 +9,7 @@ module Btrack
       end
 
       def expiration_for(g)
-        case g
-        when :minute then 1.day
-        when :hourly then 1.week
-        when :daily then 1.month
-        when :weekly then 3.month
-        when :monthly then 3.month
-        when :yearly then 1.years
-        end
+        {minute: 1.day, hourly: 1.week, daily: 1.month, weekly: 3.months, monthly: 3.months, yearly: 1.year}[g] || 1.week
       end
 
     end
