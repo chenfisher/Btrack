@@ -8,11 +8,6 @@ module Btrack
       delegate :count, :exists?, :plot, to: :query
 
       # initializes a new crieteria
-      # args must contain an array (or hash) of criteria and and optional options
-      # examples: 
-      # Criteria.new [name: "chen", sur: "fisher"], prefix: "item"
-      # Criteria.new {name: "chen", sur: "fisher"}, prefix: "item"
-      # Criteria.new name: "chen", sur: "fisher"
       def initialize(*args)
         options = args.pop if args.last.is_a?(Hash) && args.size > 1
         @options = (options ||= {}).merge(criteria: (parse args).flatten)
