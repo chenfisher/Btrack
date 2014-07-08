@@ -3,7 +3,7 @@ module Btrack
     attr_reader :from, :to, :granularity
 
     def initialize(timeframe, granularity=nil)
-      raise ArgumentError, "TimeFrame should be initialized with Symbol, Hash, Range or Btrack::TimeFrame" unless [Symbol, Hash, Range, TimeFrame].include? timeframe.class
+      raise ArgumentError, "TimeFrame should be initialized with Symbol, Hash, Range or Btrack::TimeFrame" unless [Symbol, Hash, Range, TimeFrame, Time].include? timeframe.class
       @from, @to = self.send("init_with_#{timeframe.class.name.demodulize.underscore}", timeframe)
       @granularity = granularity || (timeframe.granularity if timeframe.is_a?(TimeFrame)) || :daily
     end
@@ -19,6 +19,10 @@ module Btrack
     private
       def init_with_time_frame(timeframe)
         [timeframe.from, timeframe.to]
+      end
+
+      def init_with_time(time)
+        [time.beginning_of_day, time.end_of_day]
       end
 
       def init_with_symbol(timeframe)
@@ -52,16 +56,7 @@ module Btrack
       end
 
       def step(g)
-        case g
-        when :minute then 1.minute
-        when :hourly then 1.hour
-        when :daily then 1.day
-        when :weekly then 1.week
-        when :monthly then 1.month
-        when :yearly then 1.year
-        else
-          1.day
-        end
+        {minute: 1.minute, hourly: 1.hour, daily: 1.day, weekly: 1.week, monthly: 1.month, yearly: 1.year}[g] || 1.day
       end
   end
 end
