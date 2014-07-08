@@ -29,7 +29,7 @@ module Btrack
     class << self
       def method_missing(method, *args, &block)
         return unless method.to_s.end_with? '?'
-        Criteria.where({method.to_s.chomp('?') => args[1]}, id: args[0]).exists?
+        Criteria.where({method.to_s.chomp('?') => args[1]}.merge(args.extract_options!), id: args[0]).exists?
       end
     end
   end
