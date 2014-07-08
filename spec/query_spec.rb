@@ -2,37 +2,50 @@ require 'spec_helper'
 
 describe Btrack::Query do
 
-  context "count" do
-    before :each do
-      10.times { |i| Btrack::Tracker.track "login", i, :hourly }
-    end
+	before :each do
+	  10.times do |i|
+	    Btrack.track :logged_in, i, :hourly..:monthly # [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+	    Btrack.track :logged_in, i*2, when: 1.days.ago # [0, 2, 4, 6, 8, 10, 12, 14, 16, 18]
 
-    it "returns count" do
-      Btrack::Query.count("login", :today, :hourly).should eq 10
-    end
+	    Btrack.track :visited, i if i%3 == 0 # [0, 3, 6, 9]
+	  end
+	end
 
-    it "accepts time frame" do
-      10.times { |i| Btrack::Tracker.track "login", i+100, :hourly, when: 12.hours.ago }
-      Btrack::Query.count("login", 1.days.ago..Time.now, :hourly).should eq 20
-    end
+
+  it "returns count of unique logins for today" do
+    assert { Btrack.where(logged_in: :today).count == 10 }
   end
 
-  context "query a user" do
-    before :each do
-      Btrack::Tracker.track "login", 123, :daily
-    end
+  it "returns count of unique logins yesterday" do
+    assert { Btrack.where(logged_in: :yesterday).count == 10 }
+  end
 
-    it "returns true" do
-      Btrack::Query.query("login", :today).should be_true
-    end
+  it "returns count of unique logins in a range of time" do
+    assert { Btrack.where(logged_in: 1.days.ago..Time.now).count == 15 }
+  end
 
-    it "returns false" do
-      Btrack::Query.query("login", :yesterday).should be_false
-    end
+  it "returns count with weekly granularity" do
+  	assert { Btrack.where(logged_in: :today, granularity: :weekly).count == 10 }
+	end
 
-    it "accepts timeframe" do
-      Btrack::Query.query("login", 1.days.ago..Time.now).should be_true
-    end
+	it "returns the intersection of two different time frames" do
+  	assert { Btrack.where([{logged_in: :today}, {logged_in: :yesterday}]).count == 5 }
+	end
+
+	it "returns the intersection of two different activities" do
+  	assert { Btrack.where([{logged_in: :yesterday}, {visited: :today}]).count == 2 }
+	end
+
+  it "check if id exists in activity" do
+    assert { Btrack.where(logged_in: :today, id: 5).exists? }
+  end
+
+  it "checks if id did two activities (intersection)" do
+  	assert { Btrack.where([{logged_in: :yesterday}, {visited: :today}], id: 6).exists? }
+  end
+
+  it "should return false for id that does not satisfies an intersection" do
+  	assert { Btrack.where([{logged_in: :yesterday}, {visited: :today}], id: 3).exists? == false }
   end
 
 end
