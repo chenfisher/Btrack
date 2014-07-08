@@ -1,20 +1,24 @@
 module Btrack
   class Config
 
-    # defaults
-    @namespace = "btrack"
-    @expirations = {minute: 1.day, hourly: 1.week, daily: 1.month, weekly: 3.months, monthly: 3.months, yearly: 1.year}
+    @config = OpenStruct.new ({
+          namespace: "btrack",
+          redis_url: nil,
+          expirations: {minute: 1.day, hourly: 1.week, daily: 1.month, weekly: 3.months, monthly: 3.months, yearly: 1.year}
+        })
 
     class << self
 
-      attr_accessor :namespace, :redis_url
-
       def expiration_for(g)
-        @expirations[g]
+        @config[:expirations][g]
       end
 
       def expiration_for=(g)
-        @expirations.merge!(g)
+        @config[:expirations].merge!(g)
+      end
+
+      def method_missing(method, *args, &block)
+        @config.send(method, *args, &block)
       end
 
     end
