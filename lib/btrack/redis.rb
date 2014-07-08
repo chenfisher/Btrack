@@ -5,7 +5,7 @@ module Btrack
   class Redis
     class << self
       def create
-        (::Redis.new Config.redis_url if Config.redis_url) || ::Redis.new
+        (::Redis.new url: Config.redis_url if Config.redis_url) || ::Redis.new
       end
     end
   end

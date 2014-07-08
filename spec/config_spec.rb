@@ -10,8 +10,10 @@ describe Btrack::Config do
 		assert { Btrack::Helper.key(:logged_in).starts_with? "test" }
 	end
 
-	it "sets a redis url" do
-		Btrack.config.redis_url = "http://some-bogus-redis-url.com"
-		assert { Btrack.redis.client.host == "http://some-bogus-redis-url.com" }
+	it "sets expiration time" do
+		expected = Btrack.config.expirations.dup
+		Btrack.config.expiration_for = {weekly: 2.days}
+
+		assert { Btrack.config.expirations == expected.merge(weekly: 2.days) }
 	end
 end
