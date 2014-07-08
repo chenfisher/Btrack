@@ -3,68 +3,40 @@ require 'btrack/helper'
 
 describe Btrack::Tracker do
 
-  it "calls track_with_hash with expected hash" do
-    expected = { key: "login", granularity: :daily, id: 123 }
-    Btrack::Tracker.should_receive(:track_with_hash).with expected
-
-    Btrack::Tracker.track "login", 123, :daily
+  it "tracks with basic args" do
+    Btrack::Tracker.track("logged_in", 123, :weekly)
+    assert { is_set "logged_in", 123, :weekly }
   end
 
-  it "calls track_with_hash with expected hash when used with a block" do
-    expected = OpenStruct.new(key: "login", granularity: :daily, id: 123)
-    Btrack::Tracker.should_receive(:track_with_hash).with expected
+  it "tracks with default granularity" do
+    Btrack::Tracker.track("logged_in", 123)
+    assert { is_set "logged_in", 123 }
+  end
 
-    Btrack::Tracker.track do |b|
-      b.key = "login"
-      b.id = 123
-      b.granularity = :daily
+  it "accepts symbol as key" do
+    Btrack::Tracker.track(:logged_in, 123)
+    assert { is_set :logged_in, 123 }
+  end
+
+  it "accepts different time (past activity)" do
+    Btrack::Tracker.track(:logged_in, 123, :daily, when: 3.days.ago)
+    assert { is_set :logged_in, 123, :daily, 3.days.ago }
+  end
+
+  it "track with expiration time set" do
+    Btrack::Tracker.track(:logged_in, 123, :daily, expiration_for: { daily: 9.days })
+    assert { ttl(:logged_in, 123, :daily) == 9.days }
+  end
+
+  it "tracks with a block" do
+    Btrack::Tracker.track do |t|
+      t.key = :logged_in
+      t.id = 123
+      t.granularity = :weekly
+      t.when = 2.days.ago
     end
+
+    assert { is_set :logged_in, 123, :weekly, 2.days.ago }
   end
 
-  it "tracks the metric" do
-    Btrack::Tracker.track "login", 123, :daily
-    Btrack.redis.getbit(Btrack::Helper.key("login", :daily, Time.now), 123).should eq 1
-  end
-
-  it "accepts a symbol as key" do
-    Btrack::Tracker.track :login, 123, :daily
-    Btrack.redis.getbit(Btrack::Helper.key("login", :daily, Time.now), 123).should eq 1
-  end
-
-  it "defaults to daily granularity" do
-    Btrack::Tracker.track "login", 123
-    Btrack.redis.getbit(Btrack::Helper.key("login", :daily, Time.now), 123).should eq 1
-  end
-
-  it "tracks granularity range" do
-    Btrack::Tracker.track "login", 123, :daily..:monthly
-
-    Btrack.redis.getbit(Btrack::Helper.key("login", :daily, Time.now), 123).should eq 1
-    Btrack.redis.getbit(Btrack::Helper.key("login", :weekly, Time.now), 123).should eq 1
-    Btrack.redis.getbit(Btrack::Helper.key("login", :monthly, Time.now), 123).should eq 1
-  end
-
-  it "accepts granularity array" do
-    Btrack::Tracker.track "login", 123, [:daily, :monthly]
-
-    Btrack.redis.getbit(Btrack::Helper.key("login", :daily, Time.now), 123).should eq 1
-    Btrack.redis.getbit(Btrack::Helper.key("login", :weekly, Time.now), 123).should eq 0
-    Btrack.redis.getbit(Btrack::Helper.key("login", :monthly, Time.now), 123).should eq 1
-  end
-
-  it "accepts 'when' parameter" do
-    Btrack::Tracker.track "login", 123, :daily, when: 3.days.ago
-    Btrack.redis.getbit(Btrack::Helper.key("login", :daily, Time.now), 123).should eq 0
-    Btrack.redis.getbit(Btrack::Helper.key("login", :daily, 3.days.ago), 123).should eq 1
-  end
-
-  it "sets expiration for keys" do
-    Btrack::Tracker.track "login", 123, :daily
-    Btrack.redis.ttl(Btrack::Helper.key("login", :daily, Time.now)).should eq Btrack::Config.expiration_for :daily
-  end
-
-  it "overrides expiration set in config" do
-    Btrack::Tracker.track "login", 123, :weekly, expiration_for:{weekly:3.months}
-    Btrack.redis.ttl(Btrack::Helper.key("login", :weekly, Time.now)).should eq 3.months
-  end
 end
