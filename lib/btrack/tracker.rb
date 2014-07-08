@@ -46,13 +46,13 @@ module Btrack
         end
 
         def track_with_args(*args)
-          options = {
+          options = args.extract_options!.merge ({
             key: args[0],
             id: args[1],
             granularity: args[2]
-          }
+          })
 
-          track_with_hash options.merge(args.extract_options!)
+          track_with_hash options
         end
 
         def granularity_range(granularities)
