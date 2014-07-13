@@ -1,6 +1,28 @@
 # Btrack
 
-TODO: Write a gem description
+Btrack is an activity tracker with extensive query mechanism, minimum memory signature and maximum performance (thanks to redis)
+
+With **Btrack** you can track any activity of any entity in your website or process
+
+#### For example, tracking user logins (user 123 has just logged in):
+`Btrack.track :logged_in, 123`
+
+#### and then query for total logins:
+`Btrack.where(logged_in: :today).count`
+
+#### or query if a specific user visited your website last month:
+`Btrack.where(visited: :last_month, id: 123).exists?`
+
+#### You can also plot a graph!
+`Btrack.where(clicked_a_button: 1.week.ago..Time.now).plot`
+`=> {"btrack:clicked_a_button:2014-07-06"=>10, "btrack:clicked_a_button:2014-07-07"=>5, "btrack:clicked_a_button:2014-07-08"=>30...`
+
+#### or Cohort (for example, all users that signed in last week and visited this week )
+`Btrack.where(signed_in: :last_week, visited: :this_week).plot`
+
+# Background
+**Btrack** uses Redis bitmaps to track activities over entities
+
 
 ## Installation
 
@@ -18,7 +40,25 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+## Basic tracking
+## Granularity
+## Tracking history
+## Expiration time
+
+## Basic querying
+## Specific user
+## Granularity
+## Chaining
+
+## Plotting
+## Granularity
+## Cohort
+
+## Configuration
+## namespace
+## expiration_for
+## redis_url
+
 
 ## Contributing
 
