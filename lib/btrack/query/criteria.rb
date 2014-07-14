@@ -18,6 +18,11 @@ module Btrack
         Criteria.new @options[:criteria] + parse(criteria), @options
       end
 
+      # returns a new criteria object with the union of both criterias
+      def &(criteria)
+        Criteria.new @options[:criteria] + parse(criteria.options[:criteria]), @options
+      end
+
       # make this criteria 'real' by extracting keys and args to be passed to redis lua script
       def realize!
         prefix = "#{@options[:prefix]}:" if @options[:prefix]
