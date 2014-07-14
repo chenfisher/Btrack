@@ -10,7 +10,7 @@ module Btrack
     end
 
     def initialize(criteria = nil)
-      @criteria = criteria
+      @criteria = criteria.freeze
     end
 
     def count
