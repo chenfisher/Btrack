@@ -10,7 +10,7 @@ module Btrack
       # initializes a new crieteria
       def initialize(*args)
         options = args.pop if args.last.is_a?(Hash) && args.size > 1
-        @options = (options ||= {}).merge(criteria: (parse args).flatten)
+        @options = (options ||= {}).merge(criteria: (parse args).flatten).dup.freeze
       end
 
       # returns a new criteria object with the union of both criterias
