@@ -7,10 +7,10 @@ With **Btrack** you can track any activity of any entity in your website or proc
 #### For example, tracking user logins (user 123 has just logged in):
 `Btrack.track :logged_in, 123`
 
-#### and then query for total logins:
+#### Query for total logins:
 `Btrack.where(logged_in: :today).count`
 
-#### or query if a specific user visited your website last month:
+#### Query if a specific user visited your website last month:
 `Btrack.where(visited: :last_month, id: 123).exists?`
 
 #### You can also plot a graph!
