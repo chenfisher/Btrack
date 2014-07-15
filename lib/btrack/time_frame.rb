@@ -4,8 +4,9 @@ module Btrack
 
     def initialize(timeframe, granularity=nil)
       raise ArgumentError, "TimeFrame should be initialized with Symbol, Hash, Range or Btrack::TimeFrame" unless [Symbol, Hash, Range, TimeFrame, Time].include? timeframe.class
+
       @from, @to = self.send("init_with_#{timeframe.class.name.demodulize.underscore}", timeframe)
-      @granularity = granularity || (timeframe.granularity if timeframe.is_a?(TimeFrame)) || :daily
+      @granularity = granularity || (timeframe.granularity if timeframe.is_a?(TimeFrame)) || Config.default_granularity
     end
 
     def splat(granularity=self.granularity)

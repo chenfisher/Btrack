@@ -29,7 +29,7 @@ module Btrack
       private
 
         def track_with_hash(options)
-          granularity_range(options[:granularity] || :daily).each do |g|
+          granularity_range(options[:granularity] || Config.default_granularity).each do |g|
             key = Helper.key options[:key], g, options[:when]
 
             Btrack.redis.pipelined do |r|
