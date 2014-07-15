@@ -9,7 +9,7 @@ module Btrack
 
       # initializes a new crieteria
       def initialize(criteria, options={})
-        @criteria = Array.wrap(criteria)
+        @criteria = parse(criteria)
         @options = options
       end
 
@@ -47,6 +47,13 @@ module Btrack
       def query
         Query.new self
       end
+
+      private
+
+        def parse(criteria)
+          criteria.is_a?(Array) ? criteria : criteria.map { |k, v| {k => v} }
+        end
+
     end
   end
 end
