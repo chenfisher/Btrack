@@ -11,13 +11,13 @@ With **Btrack** you can track any activity of any entity in your website or proc
 `Btrack.where(logged_in: :today).count`
 
 #### Query if a specific user visited your website last month:
-`Btrack.where(visited: :last_month, id: 123).exists?`
+`Btrack.where(visited: :last_month).exists? 123`
 
 #### You can also plot a graph!
 `Btrack.where(clicked_a_button: 1.week.ago..Time.now).plot`
 `=> {"btrack:clicked_a_button:2014-07-06"=>10, "btrack:clicked_a_button:2014-07-07"=>5, "btrack:clicked_a_button:2014-07-08"=>30...`
 
-#### or Cohort (for example, all users that signed in last week and visited this week )
+#### Cohort analysis (for example, all users that signed in last week and visited this week )
 `Btrack.where(signed_in: :last_week, visited: :this_week).plot`
 
 # Background

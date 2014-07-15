@@ -37,11 +37,11 @@ module Btrack
         when :this_week
           return Time.now.beginning_of_week, Time.now
         when :last_week
-          return 1.week.ago.beginning_of_week..1.week.ago.end_of_week
+          return 1.week.ago.beginning_of_week, 1.week.ago.end_of_week
         when :this_month
           return Time.now.beginning_of_month, Time.now
         when :last_month
-          return 1.month.ago.beginning_of_month..1.month.ago.end_of_month
+          return 1.month.ago.beginning_of_month, 1.month.ago.end_of_month
         else
           return 1.day.ago, Time.now
         end
