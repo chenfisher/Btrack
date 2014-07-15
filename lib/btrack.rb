@@ -10,6 +10,9 @@ require "btrack/query"
 module Btrack
   extend self
 
+  delegate :where, to: Query
+  delegate :track, to: Tracker 
+
   def redis
     @redis ||= Btrack::Redis.create
   end
@@ -17,13 +20,5 @@ module Btrack
   def config
     yield Btrack::Config if block_given?
     Btrack::Config
-  end
-
-  def where(*args)
-  	Query.where *args
-  end
-
-  def track(*args, &block)
-  	Tracker.track *args, &block
   end
 end
