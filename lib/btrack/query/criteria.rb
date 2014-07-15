@@ -4,32 +4,32 @@ require 'btrack/time_frame'
 module Btrack
   class Query
     class Criteria
-      attr_reader :options
+      attr_reader :options, :criteria
       delegate :count, :exists?, :plot, to: :query
 
       # initializes a new crieteria
-      def initialize(*args)
-        options = args.pop if args.last.is_a?(Hash) && args.size > 1
-        @options = (options ||= {}).merge(criteria: (parse args).flatten).freeze
+      def initialize(criteria, options={})
+        @criteria = Array.wrap(criteria)
+        @options = options
       end
 
       # returns a new criteria object with the union of both criterias
-      def where(criteria)
-        Criteria.new @options[:criteria] + parse(criteria), @options
+      def where(*args)
+        self & Criteria.new(*args)
       end
 
       # returns a new criteria object with the union of both criterias
       def &(criteria)
-        Criteria.new @options[:criteria] + parse(criteria.options[:criteria]), @options
+        Criteria.new self.criteria + criteria.criteria, self.options.merge(criteria.options)
       end
 
       # make this criteria 'real' by extracting keys and args to be passed to redis lua script
       def realize!
         prefix = "#{@options[:prefix]}:" if @options[:prefix]
 
-        keys = @options[:criteria].map do |c|
+        keys = @criteria.map do |c|
           cvalue = c.values.first
-          (Helper.keys "#{prefix}#{c.keys.first}", TimeFrame.new(cvalue, c[:granularity] || (cvalue.granularity if cvalue.is_a? TimeFrame) || Config.default_granularity.last)).flatten
+          (Helper.keys "#{prefix}#{c.keys.first}", TimeFrame.new(cvalue, c[:granularity] || (cvalue.granularity if cvalue.is_a? TimeFrame) || Array.wrap(Config.default_granularity).last)).flatten
         end
 
         [keys.flatten << @options[:id], keys.map(&:count)]
@@ -47,14 +47,6 @@ module Btrack
       def query
         Query.new self
       end
-
-      private
-
-        # criteria is expected to be an array or a hash
-        # transform criteria to an array of hashes
-        def parse(criteria)
-          criteria.is_a?(Array) ? criteria : criteria.map { |k, v| {k => v} }
-        end
     end
   end
 end

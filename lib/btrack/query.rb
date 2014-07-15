@@ -17,9 +17,9 @@ module Btrack
       Btrack.redis.eval(lua(:count), *@criteria.realize!)
     end
 
-    def exists?
-      keys, args = @criteria.realize!
-      Btrack.redis.eval(lua(:exists), *@criteria.realize!)  == 1
+    def exists?(id = nil)
+      c = id ? @criteria.where(id: id) : @criteria
+      Btrack.redis.eval(lua(:exists), *c.realize!)  == 1
     end
 
     def plot
