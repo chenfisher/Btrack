@@ -14,16 +14,16 @@ module Btrack
     end
 
     def count
-      Btrack.redis.eval(lua(:count), *@criteria.realize!)
+      Btrack::Redis.with_sha { [lua(:count), *@criteria.realize!] }
     end
 
     def exists?(id = nil)
       c = id ? @criteria.where(nil, id: id) : @criteria
-      Btrack.redis.eval(lua(:exists), *c.realize!)  == 1
+      Btrack::Redis.with_sha { [lua(:exists), *c.realize!] }  == 1
     end
 
     def plot
-      JSON.parse Btrack.redis.eval(plot_lua, *@criteria.realize!)
+      JSON.parse Btrack::Redis.with_sha { [plot_lua, *@criteria.realize!] }
     end
 
     class << self

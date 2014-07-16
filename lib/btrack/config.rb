@@ -5,7 +5,8 @@ module Btrack
           namespace: "btrack",
           redis_url: nil, # nil means localhost with defailt redis port
           expirations: {minute: 1.day, hourly: 1.week, daily: 1.month, weekly: 3.months, monthly: 3.months, yearly: 1.year},
-          default_granularity: :daily
+          default_granularity: :daily,
+          silent: true # to break or not to break (on redis errors); that is the question
         })
 
     class << self
