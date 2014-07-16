@@ -25,7 +25,7 @@ describe Btrack::Query do
   end
 
   it "returns count with weekly granularity" do
-  	assert { Btrack.where(logged_in: :today, granularity: :weekly).count == 10 }
+  	assert { Btrack.where([{logged_in: :today, granularity: :weekly}]).count == 10 }
 	end
 
 	it "returns the intersection of two different time frames" do
@@ -37,7 +37,7 @@ describe Btrack::Query do
 	end
 
   it "check if id exists in activity" do
-    assert { Btrack.where(logged_in: :today, id: 5).exists? }
+    assert { Btrack.where(logged_in: :today).exists? 5 }
   end
 
   it "checks if id did two activities (intersection)" do
