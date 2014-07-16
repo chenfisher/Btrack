@@ -18,7 +18,7 @@ module Btrack
     end
 
     def exists?(id = nil)
-      c = id ? @criteria.where(nil, id: id) : @criteria
+      c = id ? @criteria.where([], id: id) : @criteria
       Btrack::Redis.with_sha { [lua(:exists), *c.realize!] }  == 1
     end
 

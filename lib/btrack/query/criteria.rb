@@ -9,8 +9,8 @@ module Btrack
 
       # initializes a new crieteria
       def initialize(criteria, options={})
-        @criteria = parse(criteria)
-        @options = options
+        @criteria = parse(criteria).freeze
+        @options = options.freeze
       end
 
       # returns a new criteria object with the union of both criterias
