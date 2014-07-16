@@ -32,9 +32,11 @@ module Btrack
           granularity_range(options[:granularity] || Config.default_granularity).each do |g|
             key = Helper.key options[:key], g, options[:when]
 
-            Btrack.redis.pipelined do |r|
-              r.setbit key, options[:id].to_i, 1
-              r.expire key, options[:expiration_for] && options[:expiration_for][g] || Config.expiration_for(g)
+            Btrack::Redis.with_silent do
+              Btrack.redis.pipelined do |r|
+                r.setbit key, options[:id].to_i, 1
+                r.expire key, options[:expiration_for] && options[:expiration_for][g] || Config.expiration_for(g)
+              end
             end
           end
         end
