@@ -5,6 +5,8 @@ module Btrack
   class Query
     attr_reader :criteria
 
+    delegate :with_sha, :with_silent, to: Btrack::Redis
+
     class << self
       delegate :where, to: Criteria
     end
@@ -14,16 +16,18 @@ module Btrack
     end
 
     def count
-      Btrack::Redis.with_sha { [lua(:count), *@criteria.realize!] }
+      with_silent { with_sha { [lua(:count), *@criteria.realize!] } }
     end
 
     def exists?(id = nil)
       c = id ? @criteria.where([], id: id) : @criteria
-      Btrack::Redis.with_sha { [lua(:exists), *c.realize!] }  == 1
+      with_silent { with_sha { [lua(:exists), *c.realize!] }  == 1 }
     end
 
     def plot
-      JSON.parse Btrack::Redis.with_sha { [plot_lua, *@criteria.realize!] }
+      JSON.parse with_silent { with_sha { [plot_lua, *@criteria.realize!] } }
+    rescue
+      nil
     end
 
     class << self
