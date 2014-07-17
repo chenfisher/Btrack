@@ -294,6 +294,12 @@ Btrack.config.expiration_for = { daily: 7.months }
 ### redis_url
 Sets the connection url to the redis server; defaults to nil which means localhost and default redis port
 
+## Alternatives
+[Minuteman](https://github.com/elcuervo/minuteman) is a nice alternative to **Btrack** but with the following caveats (and more):
+
+1. It does not support time frames (you cannot query for 30.days.ago..Time.now)
+2. It eagerly creates a redis key on every bitwise operator, while **Btrack** is lazy
+3. It uses redis `multi` while **Btrack** uses `lua` for better performance
 
 ## Contributing
 
