@@ -36,7 +36,7 @@ Btrack.where([{signed_in: :last_week}, {visited: :this_week}]).plot
 See relevant Redis commands for bitmaps here:
 [http://redis.io/commands/SETBIT]
 
-Read here to better understand how bitmaps work in redis and how you can use it for fast, realtime analytics: [http://blog.getspool.com/2011/11/29/fast-easy-realtime-metrics-using-redis-bitmaps/]
+Read this to better understand how bitmaps work in redis and how you can use it for fast, realtime analytics: [http://blog.getspool.com/2011/11/29/fast-easy-realtime-metrics-using-redis-bitmaps/]
 
 
 ## Installation
@@ -63,7 +63,9 @@ User with id 123 purchased something:
 Btrack.track "user:purchased", 123
 ```
 Item with id 1001 was just purchased:
+```ruby
 Btrack.track "item:purchased", 1001
+```
 
 ### Granularity
 When tracking an event a default granularity is used (see **configuration** section for more details on default values);  the default granularity is :daily, which means that tracking an event twice on the same day will result in only 1 bit:
@@ -115,7 +117,7 @@ Btrack.track :logged_in, 123, :daily..:monthly
 Btrack.where logged_in: :today, granularity: :weekly
 #=> returns 1
 ```
-## Tracking with a block
+### Tracking with a block
 You can track with a block for convenience and for specifying other tracking options:
 
 ```ruby
@@ -128,7 +130,7 @@ Btrack::Tracker.track do |b|
 end
 ```
 
-## Tracking history
+### Tracking history
 When tracking an event, the default time is ```Time.now``` which means: the event just happend.
 
 You can specify a different time when tracking an event:
@@ -140,7 +142,7 @@ Btrack::Tracker.track do |b|
 end
 ```
 
-## Expiration time
+### Expiration time
 You can specity retention for events per granularity. Use this to get rid of granularities you don't need any more and save memory (in redis)
 
 ```ruby
@@ -154,9 +156,41 @@ end
 ```
 
 ## Querying
-## Specific user
-## Granularity
-## Chaining
+
+```ruby
+# Simple querying
+Btrack.where(logged_in: :today).count
+Btrack.where(logged_in: :yesteday).count
+Btrack.where(logged_in: :last_week).count
+
+# Query with a time range
+Btrack.where(logged_in: 3.days.ago..Time.now).count
+```
+
+### Querying for a specific user/entity
+```ruby
+Btrack.where(logged_in: :today).exists? 123
+#=> returns true if user 123 logged in today
+```
+### Lazyness
+Queries are not "realized" until you perform an action:
+```ruby
+a_query = Btrack.where logged_in: 1.week.ago..Time.now
+#=> <Btrack::Query::Criteria:0x007fceb248e120 @criteria=[{:logged_in=>:today}], @options={}>
+
+a_query.count
+#=> 3
+
+a_query.exists? 123
+#=> true
+
+a_query.plot
+#=> {"btrack:logged_in:2014-07-06"=>10, "btrack:logged_in:2014-07-07"=>5, "btrack:logged_in:2014-07-08"=>30...
+```
+
+
+
+### Granularity
 
 ## Plotting
 ## Granularity
