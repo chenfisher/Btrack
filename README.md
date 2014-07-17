@@ -130,7 +130,7 @@ Btrack::Tracker.track do |b|
 end
 ```
 
-### Tracking history
+### Tracking in the past tense
 When tracking an event, the default time is ```Time.now``` which means: the event just happend.
 
 You can specify a different time when tracking an event:
@@ -171,6 +171,16 @@ Btrack.where(logged_in: 3.days.ago..Time.now).count
 ```ruby
 Btrack.where(logged_in: :today).exists? 123
 #=> returns true if user 123 logged in today
+
+Btrack.where(visited: 7.days.ago..Time.now)exists? 123
+#=> returns true if user 123 visited the website in the past 7 days
+
+# You can use a cool shortcut to query for a specific user:
+Btrack::Query.visited? 123, 7.days.ago..Time.now
+#=> same as above, but with a cool shortcut
+
+Btrack::Query.logged_in? 123, :today
+#=> true/false
 ```
 ### Lazyness
 Queries are not "realized" until you perform an action:
@@ -187,19 +197,102 @@ a_query.exists? 123
 a_query.plot
 #=> {"btrack:logged_in:2014-07-06"=>10, "btrack:logged_in:2014-07-07"=>5, "btrack:logged_in:2014-07-08"=>30...
 ```
+### Intersection (querying for multiple events)
+You can query for multiple events
+```ruby
+# signed in AND purchased something this month
+q = Btrack.where([{signed_in: :this_month}, {purchased: :this_month}])
 
+q.count
+q.exists? 123
+q.plot
 
+# logged last week AND logged in today
+Btrack.where([{logged_in: :last_week}, {logged_in: :today}])
+
+# signed in the last 30 days, logged in this week and purchased something
+Btrack.where([{signed_in: 30.days.ago..Time.now}, {logged_in: :last_week}, {purchased_something: :this_month}])
+```
+
+#### The & operator
+You can use `&` for intersection
+```ruby
+signed_in = Btrack.where signed_in: 30.days.ago..Time.now
+visited = Btrack.where visited: 7.days.ago..Time.now
+
+signed_in_AND_visited = signed_in & visited
+signed_in_visited_and_whatever = signed_in_AND_visited & Btrack.where(whatever: :today)
+```
 
 ### Granularity
+When querying, you should make sure you are tracking in the same granularity. If you are tracking in the range of :daily..:monthly then you can only query in that range (or you will get wrong results)
+
+To specify the granualrity when querying, just add a :granualrity key to the hash (per event):
+
+```ruby
+Btrack.where([{clicked_a_button: 3.hours.ago..Time.now, granularity: :hourly}])
+
+# granularity is per event:
+Btrack.where([{logged_in: 1.hour.ago..Time.now, granularity: :minute}, {did_something: :today, granularity: :daily}])
+
+# see the next section (plotting) with regards to granularity when plotting a graph
+```
+
+> Default granularity when querying is the lowest granularity (meaning lowest resolution) set in the configuration default value (see configuration section for default values); so, if the default tracking granularities are :daily..:monthly, then when querying the default granularity is :monthly (for best performance)
 
 ## Plotting
-## Granularity
-## Cohort
+Use `plot` to plot a graph
+```ruby
+# plot a graph with a daily resolution (granularity)
+Btrack.where([{logged_in: 30.days.ago..Time.now, granularity: :daily}]).plot
+
+# plot a graph with an hourly resolution
+Btrack.where([{logged_in: 30.days.ago..Time.now, granularity: :hourly}]).plot
+```
+
+### Cohort
+You can use what you've learned so far to create a cohort analysis
+```ruby
+visits = Btrack.where [visited: 30.days.ago..Time.now, granularity: :daily]
+purchases = Btrack.where [purchased_something: 30.days.ago..Tome, granularity: :daily]
+
+visits_and_purchases = visits & purchases
+
+# now plot a cohort
+visits_and_purchases.plot
+#=> {"btrack:visited:2014-06-23"=>10, "btrack:visited:2014-07-16"=>20, "btrack:visited:2014-07-05"=>5, "btrack:visited:2014-06-26"=>0...
+
+# NOTE that when plotting multiple events (cohort), the returned keys for the plot are named after the first event
+```
 
 ## Configuration
-## namespace
-## expiration_for
-## redis_url
+Put this in an `initializer` to configure **Btrack**
+```ruby
+Btrack.config do |config|
+  config.namespace = 'btrack' # default namespace for redis keys
+  config.redis_url = nil # redis url to use; defaults to nil meaning localhost and default redis port
+  config.expiration_for = {minute: 1.day, hourly: 1.week, daily: 3.months, weekly: 1.year, monthly: 1.year, yearly: 1.year}
+  config.default_granularity: :daily..:monthly # default granularities when tracking
+  config.silent = false # to break or not to break on redis errors
+end
+```
+
+### namespace
+Sets the namespace to use for the keys in redis; defaults to **btrack**
+
+> keys in redis look like this: `btrack:logged_in:2014-07-15`
+> 
+>and in a general form: `namespace:event:datetime`
+
+### expiration_for
+Use expiration_for to set the expiration for a specific granularity
+```ruby
+Btrack.config.expiration_for = { daily: 7.months }
+# will merge :daily expiration with the whole expirations hash
+# {minute: 1.day, hourly: 1.week, daily: 7.months, weekly: 1.year, monthly: 1.year, yearly: 1.year}
+```
+### redis_url
+Sets the connection url to the redis server; defaults to nil which means localhost and default redis port
 
 
 ## Contributing
