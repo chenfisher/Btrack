@@ -71,18 +71,7 @@ Btrack.track "item:purchased", 1001
 ```
 
 ### Granularity
-When tracking an event a default granularity is used (see **configuration** section for more details on default values);  the default granularity is :daily, which means that tracking an event twice on the same day will result in only 1 bit:
-```ruby
-# The time is 11.00am and user 123 has just logged in:
-Btrack.track :logged_in, 123
-
-# The time is 19.00 and the same user (123) has just logged in:
-Btrack.track :logged_in, 123
-
-# Now when we query for logins, we get the unique login count for the day:
-Btrack.where(logged_in: :today).count
-#=> 1
-```
+When tracking an event a default granularity is used (see **configuration** section for more details on default values);  the default granularity is :hourly..:monthly, which means :hourly, :daily, :weekly and :monthly
 
 To track with a different granualrity:
 ```ruby
@@ -100,9 +89,8 @@ Btrack.track :logged_in, 123, :hourly..:monthly
 Available granularities: [:minute, :hourly, :daily, :weekly, :monthly, :yearly]
 
 
-#### Why is that important?
-
-When querying an event with granualrity other than the one used for tracking - you will get wrong results. For example, tracking with a daily granularity while querying with a weekly granualrity.
+#### CAVEATS with granularities
+You should be aware that there is a close relation between tracking and querying in regards to granularities. see **querying/granularity** section for more details.
 
 
 ```ruby
@@ -110,14 +98,14 @@ When querying an event with granualrity other than the one used for tracking - y
 Btrack.track :logged_in, 123, :daily
 
 # query with weekly granualrity:
-Btrack.where logged_in: :today, granularity: :weekly
+Btrack.where [{logged_in: :today, granularity: :weekly}]
 #=> returns 0
 
 # tracking with a range of granularities:
 Btrack.track :logged_in, 123, :daily..:monthly
 
 # now querying with weekly granularity is OK because it is included in the range:
-Btrack.where logged_in: :today, granularity: :weekly
+Btrack.where [{logged_in: :today, granularity: :weekly}]
 #=> returns 1
 ```
 ### Tracking with a block
@@ -170,6 +158,12 @@ Btrack.where(logged_in: :last_week).count
 Btrack.where(logged_in: 3.days.ago..Time.now).count
 ```
 
+`Btrack.where` has the following form: `where(criteria, options={})`
+
+**criteria** is an array of hashes, where each hash is the event to query and relevant optional options of that event (don't worry, there are plentty of examples in this section; just make sure to wrap the criteria with array and proper hashes when querying for more than one event or when specifying a granularity for an event)
+
+**options={}** is preserved for feature use and is meant for specifying options that are not event specific
+
 ### Querying for a specific user/entity
 ```ruby
 Btrack.where(logged_in: :today).exists? 123
@@ -188,7 +182,7 @@ Btrack::Query.logged_in? 123, :today
 ### Lazyness
 Queries are not "realized" until you perform an action:
 ```ruby
-a_query = Btrack.where logged_in: 1.week.ago..Time.now
+a_query = Btrack.where [logged_in: 1.week.ago..Time.now, granularity: :daily]
 #=> <Btrack::Query::Criteria:0x007fceb248e120 @criteria=[{:logged_in=>:today}], @options={}>
 
 a_query.count
@@ -199,7 +193,12 @@ a_query.exists? 123
 
 a_query.plot
 #=> {"2014-07-06"=>10, "2014-07-07"=>5, "2014-07-08"=>30...
+
+# You can use the "realize!" action to see what's under the hood
+a_query.realize!
+#=> [["btrack:logged_in:2014-07-11", "btrack:logged_in:2014-07-12", "btrack:logged_in:2014-07-13"...
 ```
+
 ### Intersection (querying for multiple events)
 You can query for multiple events
 ```ruby
@@ -230,7 +229,7 @@ signed_in_visited_and_whatever = signed_in_AND_visited & Btrack.where(whatever: 
 ### Granularity
 When querying, you should make sure you are tracking in the same granularity. If you are tracking in the range of :daily..:monthly then you can only query in that range (or you will get wrong results)
 
-To specify the granualrity when querying, just add a :granualrity key to the hash (per event):
+To specify the granualrity when querying, add a :granualrity key to the hash (per event):
 
 ```ruby
 Btrack.where([{clicked_a_button: 3.hours.ago..Time.now, granularity: :hourly}])
@@ -238,10 +237,20 @@ Btrack.where([{clicked_a_button: 3.hours.ago..Time.now, granularity: :hourly}])
 # granularity is per event:
 Btrack.where([{logged_in: 1.hour.ago..Time.now, granularity: :minute}, {did_something: :today, granularity: :daily}])
 
-# see the next section (plotting) with regards to granularity when plotting a graph
+# see the next section (plotting) about granularity when plotting a graph
 ```
 
-> Default granularity when querying is the lowest granularity (meaning lowest resolution) set in the configuration default value (see configuration section for default values); so, if the default tracking granularities are :daily..:monthly, then when querying the default granularity is :monthly (for best performance)
+Another possible error you should be aware of is when querying for a timeframe that is not correlated with the granularity:
+
+```ruby
+# timeframe is :today, while granularity is :weekly
+Btrack.where([{logged_in: :today, granularity: :weekly}])
+# this will result in wrong results because :weekly granularity will refer
+# to the whole week, while you probably meant to query only :today
+```
+
+
+> Default granularity when querying is the highest resolution set in configuration.default_granularity (:hourly..:monthly => :hourly is the default when querying)
 
 ## Plotting
 Use `plot` to plot a graph
