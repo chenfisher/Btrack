@@ -27,9 +27,11 @@ module Btrack
       def realize!
         prefix = "#{@options[:prefix]}:" if @options[:prefix]
 
+        default_granularity = Config.default_granularity.is_a?(Range) ? Config.default_granularity.last : Array.wrap(Config.default_granularity).last
+
         keys = @criteria.map do |c|
           cvalue = c.values.first
-          (Helper.keys "#{prefix}#{c.keys.first}", TimeFrame.new(cvalue, c[:granularity] || (cvalue.granularity if cvalue.is_a? TimeFrame) || Array.wrap(Config.default_granularity).last)).flatten
+          (Helper.keys "#{prefix}#{c.keys.first}", TimeFrame.new(cvalue, c[:granularity] || (cvalue.granularity if cvalue.is_a? TimeFrame) || default_granularity)).flatten
         end
 
         [keys.flatten << @options[:id], keys.map(&:count)]
@@ -53,7 +55,6 @@ module Btrack
         def parse(criteria)
           criteria.is_a?(Array) ? criteria : criteria.map { |k, v| {k => v} }
         end
-
     end
   end
 end
