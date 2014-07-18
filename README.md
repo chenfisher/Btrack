@@ -25,7 +25,7 @@ Btrack::Query.visited? 123, :today
 #### You can also plot a graph!
 ``` ruby
 Btrack.where(clicked_a_button: 1.week.ago..Time.now).plot
-#=> {"2014-07-06"=>10, "2014-07-07"=>5, "2014-07-08"=>30...
+#=> {2014-07-14 00:00:00 +0300=>10, 2014-07-14 00:00:00 +0300=>5, 2014-07-14 00:00:00 +0300=>30...
 ```
 
 #### Cohort analysis (for example, all users that signed in last week and visited this week )
@@ -192,7 +192,7 @@ a_query.exists? 123
 #=> true
 
 a_query.plot
-#=> {"2014-07-06"=>10, "2014-07-07"=>5, "2014-07-08"=>30...
+#=> {2014-07-01 00:00:00 +0300=>10, 2014-07-01 00:00:00 +0300=>5...
 
 # You can use the "realize!" action to see what's under the hood
 a_query.realize!
@@ -272,7 +272,7 @@ visits_and_purchases = visits & purchases
 
 # now plot a cohort
 visits_and_purchases.plot
-#=> {"2014-06-23"=>10, "2014-07-16"=>20, "2014-07-05"=>5, "2014-06-26"=>0...
+#=> {2014-07-01 00:00:00 +0300=>10, 2014-07-01 00:00:00 +0300=>20, ...
 
 # NOTE that when plotting multiple events (cohort), the returned keys for the plot are named after the first event
 ```
