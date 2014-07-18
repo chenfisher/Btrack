@@ -25,7 +25,10 @@ module Btrack
     end
 
     def plot
-      JSON.parse with_silent { with_sha { [plot_lua, *@criteria.realize!] } }
+      JSON.parse(with_silent { with_sha { [plot_lua, *@criteria.realize!] } }).inject({}) do |n, (k, v)|
+        n[k.rpartition(":").last] = v
+        n
+      end
     rescue
       nil
     end
