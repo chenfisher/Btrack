@@ -17,6 +17,9 @@ Btrack.where(logged_in: :today).count
 #### Query if a specific user visited your website last month:
 ```ruby
 Btrack.where(visited: :last_month).exists? 123
+
+# use a cool shortcut
+Btrack::Query.visited? 123, :today
 ```
 
 #### You can also plot a graph!
