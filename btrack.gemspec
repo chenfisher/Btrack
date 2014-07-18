@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Chen Fisher"]
   spec.email         = ["chen.fisher@gmail.com"]
   spec.description   = %q{Enables tracking and querying of any activity in a website or process with minimum memory signature and maximum performance (thanks to redis)}
-  spec.summary       = %q{Activity tracker with minimum memory signature and maximum performance (thanks to redis)}
+  spec.summary       = %q{Activity tracker with minimum memory footprint and maximum performance (thanks to redis)}
   spec.homepage      = ""
   spec.license       = "MIT"
 
