@@ -27,7 +27,7 @@ module Btrack
       def realize!
         prefix = "#{@options[:prefix]}:" if @options[:prefix]
 
-        default_granularity = Config.default_granularity.is_a?(Range) ? Config.default_granularity.last : Array.wrap(Config.default_granularity).last
+        default_granularity = Config.default_granularity.is_a?(Range) ? Config.default_granularity.first : Array.wrap(Config.default_granularity).first
 
         keys = @criteria.map do |c|
           cvalue = c.values.first
