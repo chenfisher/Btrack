@@ -27,11 +27,9 @@ module Btrack
       def realize!
         prefix = "#{@options[:prefix]}:" if @options[:prefix]
 
-        default_granularity = Config.default_granularity.is_a?(Range) ? Config.default_granularity.first : Array.wrap(Config.default_granularity).first
-
         keys = @criteria.map do |c|
           cvalue = c.values.first
-          (Helper.keys "#{prefix}#{c.keys.first}", TimeFrame.new(cvalue, c[:granularity] || (cvalue.granularity if cvalue.is_a? TimeFrame) || default_granularity)).flatten
+          (Helper.keys "#{prefix}#{c.keys.first}", TimeFrame.new(cvalue, c[:granularity] || (cvalue.granularity if cvalue.is_a? TimeFrame) || self.class.default_granularity)).flatten
         end
 
         [keys.flatten << @options[:id], keys.map(&:count)]
@@ -42,6 +40,10 @@ module Btrack
       class << self
         def where(*args)
           Criteria.new *args
+        end
+
+        def default_granularity
+          Config.default_granularity.is_a?(Range) ? Config.default_granularity.first : Array.wrap(Config.default_granularity).first
         end
       end
 

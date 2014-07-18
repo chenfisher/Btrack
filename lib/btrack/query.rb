@@ -26,9 +26,11 @@ module Btrack
 
     def plot
       JSON.parse(with_silent { with_sha { [plot_lua, *@criteria.realize!] } }).inject({}) do |n, (k, v)|
-        n[k.rpartition(":").last] = v
+        g = @criteria.criteria.first[:granularity] || Criteria.default_granularity
+        key = Time.strptime(k.rpartition(":").last, Helper.format(g))
+        n[key] = v
         n
-      end
+      end.sort_by { |t, c| t }
     rescue
       nil
     end
