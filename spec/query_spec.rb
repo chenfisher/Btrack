@@ -25,7 +25,7 @@ describe Btrack::Query do
   end
 
   it "returns count with weekly granularity" do
-  	assert { Btrack.where([{logged_in: :today, granularity: :weekly}]).count == 10 }
+  	assert { Btrack.where([{logged_in: :this_week, granularity: :weekly}]).count == 15 }
 	end
 
 	it "returns the intersection of two different time frames" do
