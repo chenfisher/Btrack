@@ -30,7 +30,7 @@ module Btrack
         key = Time.strptime(k.rpartition(":").last, Helper.format(g))
         n[key] = v
         n
-      end.sort_by { |t, c| t }
+      end
     rescue
       nil
     end
