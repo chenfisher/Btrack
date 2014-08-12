@@ -59,7 +59,7 @@ Or install it yourself as:
 ## Usage
 
 ## Tracking
-Basic tracking is done by specifying the event to track (can be a string or a symbol) and the id of the entity you are tracking (**must** be an interger)
+Basic tracking is done by specifying the event to track (can be a string or a symbol) and the id of the entity you are tracking (**must** be an interger - Redis uses this value as an offset to the bitmap so it must be an integer; see Redis bitmap ops for more information)
 
 User with id 123 purchased something:
 ```ruby
