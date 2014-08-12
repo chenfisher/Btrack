@@ -11,7 +11,6 @@ describe Btrack::Query do
 	  end
 	end
 
-
   it "returns count of unique logins for today" do
     assert { Btrack.where(logged_in: :today).count == 10 }
   end
